@@ -198,7 +198,7 @@
         window.socket.send(msg);
 	}
 	
-    ext.rotate_motor = function (speed, dir) {
+    ext.rotate_motor = function (speed, dir, steps) {
 		validateConnection();
         console.log("rotate_motor");
 		var valid = true;
@@ -206,6 +206,11 @@
 		if (!motor_configured) {
 			valid = false;
 			alert("Configure motor with four pins before using it.");
+		}
+		
+		if (steps < 1) {
+			valid = false;
+			alert("Steps must be > 0");
 		}
 		
 		if (dir != 'cw' && dir != 'ccw') {
@@ -220,7 +225,7 @@
 		
 		if (valid) {
             var msg = JSON.stringify({
-                "command": 'rotate_motor', 'speed': speed, 'dir': dir
+                "command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
             });
 			sendMessage(msg);
 		}
@@ -262,8 +267,9 @@
 			[" ", 'Set up motor with four GPIO pins', "configure_motor", "PIN1", "PIN2", "PIN3", "PIN4"],
 			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
 
-			[" ", 'Rotate motor %m.motor_direction at %m.motor_speed speed', "rotate_motor", "SPEED", "DIR"],
+			[" ", 'Rotate motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "SPEED", "DIR", 0],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
+
 			//
 			//             [" ", 'Set BCM %n as an Input', 'input','PIN'],
 			//             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
