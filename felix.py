@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
+# no. #!/usr/bin/env python3
 
 import json
 import os
 import sys
 import time
+import traceback
 from subprocess import call
 
 import pigpio
@@ -23,12 +24,13 @@ class FelixServer(WebSocket):
     MotorSeq[6] = [0,0,1,0]
     MotorSeq[7] = [0,1,1,0]
     MotorDelayForSpeed = {
-        "slow": 40,
-        "medium": 20,
-        "fast": 10,
+        "slow": 40/1000,
+        "medium": 20/1000,
+        "fast": 10/1000,
+        "super fast": 5/1000
     }
     
-    def handleSetupMotor(payload):
+    def handleSetupMotor(self, payload):
         print("--handleSetupMotor:", payload)
         self.motor_pin1 = int(payload['pin1'])
         self.motor_pin2 = int(payload['pin2'])
@@ -38,45 +40,48 @@ class FelixServer(WebSocket):
         self.pi.set_mode(self.motor_pin2, pigpio.OUTPUT)
         self.pi.set_mode(self.motor_pin3, pigpio.OUTPUT)
         self.pi.set_mode(self.motor_pin4, pigpio.OUTPUT)
-        self.motor_configured = true;
+        self.motor_configured = True;
 
-    def handleRotateMotor(payload): # "command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
-
+    def handleRotateMotor(self, payload): # "command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
         print("--handleRotateMotor:", payload)
-        if (!self.motor_configured):
+        if not (self.motor_configured):
             print("Motor not configured; ignoring.")
             return
-        delay = MotorDelayForSpeed.get([payload['speed']], 10)
+        delay = self.MotorDelayForSpeed.get(payload['speed'], 10)
         if (payload['dir'] == 'cw'):
-            _motorForward(delay, payload['steps'])
+            self._motorForward(delay, payload['steps'])
         else:
-            _motorBackward(delay, payload['steps'])
+            self._motorBackward(delay, payload['steps'])
+        self._setMotorPins(0, 0, 0, 0)
     
-    def _setMotorPins(pin1Val, pin2Val, pin3Val, pin4Val):
+    def _setMotorPins(self, pin1Val, pin2Val, pin3Val, pin4Val):
+        # print("setPins", pin1Val, pin2Val, pin3Val, pin4Val)
         self.pi.write(self.motor_pin1, pin1Val)
         self.pi.write(self.motor_pin2, pin2Val)
         self.pi.write(self.motor_pin3, pin3Val)
         self.pi.write(self.motor_pin4, pin4Val)
 
-    def _motorForward(delay, steps):
+    def _motorForward(self, delay, steps):
+        # print("--- motorForward", self, delay, steps)
         for i in range(steps):
-            for j in range(MotorStepCount):
-                _setMotorPins(MotorSeq[j][0], MotorSeq[j][1], MotorSeq[j][2], MotorSeq[j][3])
+            for j in range(self.MotorStepCount):
+                self._setMotorPins(self.MotorSeq[j][0], self.MotorSeq[j][1], self.MotorSeq[j][2], self.MotorSeq[j][3])
                 time.sleep(delay)
                 
-    def _motorBackward(delay, steps):
+    def _motorBackward(self, delay, steps):
+        # print("--- motorBackward", self, delay, steps)
         for i in range(steps):
-            for j in reversed(range(MotorStepCount)):
-                _setMotorPins(MotorSeq[j][0], MotorSeq[j][1], MotorSeq[j][2], MotorSeq[j][3])
+            for j in reversed(range(self.MotorStepCount)):
+                self._setMotorPins(self.MotorSeq[j][0], self.MotorSeq[j][1], self.MotorSeq[j][2], self.MotorSeq[j][3])
                 time.sleep(delay)
 
-    def handleInput(payload):
+    def handleInput(self, payload):
         pin = int(payload['pin'])
         self.pi.set_glitch_filter(pin, 20000)
         self.pi.set_mode(pin, pigpio.INPUT)
         self.pi.callback(pin, pigpio.EITHER_EDGE, self.input_callback)
         
-    def handleDigitalWrite(payload):
+    def handleDigitalWrite(self, payload):
         pin = int(payload['pin'])
         self.pi.set_mode(pin, pigpio.OUTPUT)
         state = payload['state']
@@ -85,17 +90,17 @@ class FelixServer(WebSocket):
         else:
             self.pi.write(pin, 1)
 
-    def handleAnalogWrite(payload):
+    def handleAnalogWrite(self, payload):
         pin = int(payload['pin'])
         self.pi.set_mode(pin, pigpio.OUTPUT)
         value = int(payload['value'])
         self.pi.set_PWM_dutycycle(pin, value)
 
-    def handleServo(payload):
+    def handleServo(self, payload):
         # HackEduca ---> When a user wishes to set a servo:
         # Using SG90 servo:
-        # 180° = 2500 Pulses; 0° = 690 Pulses
-        # Want Servo 0°-->180° instead of 180°-->0°:
+        # 180 = 2500 Pulses; 0 = 690 Pulses
+        # Want Servo 0-->180 instead of 180-->0:
         # Invert pulse_max to pulse_min
         # pulse_width = int((((pulse_max - pulse_min)/(degree_max - degree_min)) * value) + pulse_min)
         # Where:
@@ -103,8 +108,8 @@ class FelixServer(WebSocket):
         # >>>>----------------------->
         # import RPi.GPIO as GPIO
         # import pigpio
-        # Pulse = 690 # 0°
-        # Pulse = 2500 # 180°
+        # Pulse = 690 # 0
+        # Pulse = 2500 # 180
         # pi = pigpio.pi()
         # pi.set_mode(23, pigpio.OUTPUT)
         # pi.set_servo_pulse_width(23, Pulse)
@@ -121,7 +126,7 @@ class FelixServer(WebSocket):
         self.pi.set_servo_pulsewidth(pin, Pulsewidth)
         time.sleep(0.01)
 
-    def handleTone(payload):
+    def handleTone(self, payload):
         pin = int(payload['pin'])
         self.pi.set_mode(pin, pigpio.OUTPUT)
 
@@ -140,29 +145,35 @@ class FelixServer(WebSocket):
             self.pi.wave_delete(wid)
 
     def handleMessage(self):
-        # get command from Scratch2
-        payload = json.loads(self.data)
-        print("Message received:", payload)
-        client_cmd = payload['command']
+        try:
+            payload = json.loads(self.data)
+            print("Message received:" + str(payload))
+            client_cmd = payload['command']
+            print("Client command: " + str(client_cmd))
 
-        if client_cmd == 'input':
-            handleInput(payload)
-        elif client_cmd == 'digital_write':
-            handleDigitalWrite(payload) 
-        elif client_cmd == 'analog_write':
-            handleAnalogWrite(payload)
-        elif client_cmd == 'servo':
-            handleServo(payload)
-        elif client_cmd == 'setup_motor':
-            handleSetupMotor(payload)
-        elif client_cmd == 'rotate_motor':
-            handleRotateMotor(payload)
-        elif client_cmd == 'tone':
-            handleTone(payload)
-        elif client_cmd == 'ready':
-            pass
-        else:
-            print("Unknown command received", client_cmd)
+            if client_cmd == 'input':
+                self.handleInput(payload)
+            elif client_cmd == 'digital_write':
+                self.handleDigitalWrite(payload) 
+            elif client_cmd == 'analog_write':
+                self.handleAnalogWrite(payload)
+            elif client_cmd == 'servo':
+                self.handleServo(payload)
+            elif client_cmd == 'setup_motor':
+                self.handleSetupMotor(payload)
+            elif client_cmd == 'rotate_motor':
+                self.handleRotateMotor(payload)
+            elif client_cmd == 'tone':
+                self.handleTone(payload)
+            elif client_cmd == 'ready':
+                pass
+            else:
+                print("Unknown command received", client_cmd)
+            print("------ - ------")
+            print
+        except Exception, err:
+            print Exception, err
+            traceback.print_exc()
 
     # call back from pigpio when a digital input value changed
     # send info back up to scratch
@@ -198,7 +209,7 @@ def run_server():
         print('pigpiod has been started')
 
     os.system('scratch2&')
-    server = SimpleWebSocketServer('', 9000, FelixServer)
+    server = SimpleWebSocketServer('', 9001, FelixServer)
     server.serveforever()
 
 if __name__ == "__main__":

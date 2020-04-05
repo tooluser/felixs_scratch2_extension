@@ -6,8 +6,9 @@
     var myMsg = 'not_ready';
 	var motor_configured = false;
 
-    ext.cnct = function (callback) {
-        window.socket = new WebSocket("ws://127.0.0.1:9000");
+    ext.connect = function (callback) {
+		console.log("Starting websocket to port 9001")
+        window.socket = new WebSocket("ws://127.0.0.1:9001");
         window.socket.onopen = function () {
             var msg = JSON.stringify({
                 "command": "ready"
@@ -50,6 +51,17 @@
 			motor_configured = false;
         };
     };
+	
+	ext.disconnect = function (callback) {
+		console.log("Disconnecting websocket on port 9001");
+		myMsg = "disconnected";
+		connected = false;
+		
+        var msg = JSON.stringify({
+            "command": "shutdown"
+        });
+        window.socket.send(msg);
+	}
 
     // Cleanup function when the extension is unloaded
     ext._shutdown = function () {
@@ -189,7 +201,7 @@
 	
 	function validateConnection() {
         if (connected == false) {
-            alert("Server Not Connected");
+            // alert("Server Not Connected");
         }
 	}
 	
@@ -198,37 +210,35 @@
         window.socket.send(msg);
 	}
 	
-    ext.rotate_motor = function (speed, dir, steps) {
+    ext.rotate_motor = function (dir, speed, steps) {
 		validateConnection();
         console.log("rotate_motor");
-		var valid = true;
+		// alert("SPEED: '" + speed + "', DIR: '" + dir + "', STEPS: '" + steps + "'.");
 		
 		if (!motor_configured) {
-			valid = false;
-			alert("Configure motor with four pins before using it.");
+			// alert("Configure motor with four pins before using it.");
+			return;
 		}
 		
 		if (steps < 1) {
-			valid = false;
-			alert("Steps must be > 0");
+			// alert("Steps must be > 0");
+			return;
 		}
 		
-		if (dir != 'cw' && dir != 'ccw') {
-			valid = false;
-			alert("Direction value must be 'cw' or 'ccw'");
+		if (! (dir === 'cw' || dir === 'ccw')) {
+			// alert("Direction must be 'cw' or 'ccw' (It is '" + dir + "'.)");
+			return;
 		}
 		
-		if (speed != 'slow' && speed != 'medium' && speed != 'fast') {
-			valid = false;
-			alert("Speed must be 'slow', 'medium', or 'fast'");
+		if (! (speed === 'slow' || speed === 'medium' || speed === 'fast' || speed === 'super fast')) {
+			// alert("Speed must be 'slow', 'medium', or 'fast' (It is '" + speed + "'.)" );
+			return;
 		}
 		
-		if (valid) {
-            var msg = JSON.stringify({
-                "command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
-            });
-			sendMessage(msg);
-		}
+        var msg = JSON.stringify({
+			"command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
+		});
+		sendMessage(msg);
     };
 	
 	ext.setup_motor = function (pin1, pin2, pin3, pin4) {
@@ -253,23 +263,24 @@
 		if (!pinsValid) { return; }
 		
 		var msg = JSON.stringify({
-			"command": 'setup_motor', 'pin1': parseInt(pin1), 'pin2': parseInt(pin2), 'pin4': parseInt(pin3), 'pin4': parseInt(pin4)
+			"command": 'setup_motor', 'pin1': parseInt(pin1), 'pin2': parseInt(pin2), 'pin3': parseInt(pin3), 'pin4': parseInt(pin4)
 		})
 		sendMessage(msg);
 		motor_configured = true;
-		//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
 	}
+	
+	ext.
 
     // Block and block menu descriptions
     var descriptor = {
         blocks: [
             ["w", 'Connect to felix server.', 'connect'],
-			[" ", 'Set up motor with four GPIO pins', "configure_motor", "PIN1", "PIN2", "PIN3", "PIN4"],
+			["w", 'Disconnect from felix server.', 'disconnect'],
+			[" ", 'Set up stepper motor with GPIO pins %n, %n, %n, and %n', "setup_motor", "21", "20", "16", "12"],
 			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
 
-			[" ", 'Rotate motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "SPEED", "DIR", 0],
+			[" ", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
-
 			//
 			//             [" ", 'Set BCM %n as an Input', 'input','PIN'],
 			//             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
@@ -282,7 +293,7 @@
         "menus": {
             "high_low": ["0", "1"],
 			"motor_direction": ["cw", "ccw"],
-			"motor_speed" : ["slow", "medium", "fast"]
+			"motor_speed" : ["slow", "medium", "fast", "super fast"]
         },
         url: 'http://www.nowhereville.org'
     };
