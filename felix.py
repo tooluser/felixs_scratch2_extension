@@ -31,7 +31,7 @@ class FelixServer(WebSocket):
     }
     
     def handleSetupMotor(self, payload):
-        print("--handleSetupMotor:", payload)
+        print("--handleSetupMotor")
         self.motor_pin1 = int(payload['pin1'])
         self.motor_pin2 = int(payload['pin2'])
         self.motor_pin3 = int(payload['pin3'])
@@ -40,19 +40,27 @@ class FelixServer(WebSocket):
         self.pi.set_mode(self.motor_pin2, pigpio.OUTPUT)
         self.pi.set_mode(self.motor_pin3, pigpio.OUTPUT)
         self.pi.set_mode(self.motor_pin4, pigpio.OUTPUT)
-        self.motor_configured = True;
+        self.motorConfigured = True;
+        self.motorMoving = False;
 
     def handleRotateMotor(self, payload): # "command": 'rotate_motor', 'speed': speed, 'dir': dir, 'steps': steps
         print("--handleRotateMotor:", payload)
-        if not (self.motor_configured):
+        if not (self.motorConfigured):
             print("Motor not configured; ignoring.")
             return
+        
+        if (self.motorMoving):
+            print("Motor already moving; skipping.")
+            return
+
+        self.motorMoving = True
         delay = self.MotorDelayForSpeed.get(payload['speed'], 10)
         if (payload['dir'] == 'cw'):
             self._motorForward(delay, payload['steps'])
         else:
             self._motorBackward(delay, payload['steps'])
         self._setMotorPins(0, 0, 0, 0)
+        self.motorMoving = False
     
     def _setMotorPins(self, pin1Val, pin2Val, pin3Val, pin4Val):
         # print("setPins", pin1Val, pin2Val, pin3Val, pin4Val)
