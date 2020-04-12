@@ -24,10 +24,10 @@ class FelixServer(WebSocket):
     MotorSeq[6] = [0,0,1,0]
     MotorSeq[7] = [0,1,1,0]
     MotorDelayForSpeed = {
-        "slow": 40/1000,
-        "medium": 20/1000,
-        "fast": 10/1000,
-        "super fast": 5/1000
+        "slow": 40.0/1000,
+        "medium": 20.0/1000,
+        "fast": 10.0/1000,
+        "super fast": 5.0/1000
     }
     
     def handleSetupMotor(self, payload):
