@@ -202,6 +202,7 @@ def run_server():
     # checking running processes.
     # if the backplane is already running, just note that and move on.
     found_pigpio = False
+    found_scratch = False
     print('Starting server')
 
     for pid in psutil.pids():
@@ -215,8 +216,19 @@ def run_server():
     if not found_pigpio:
         call(['sudo', 'pigpiod'])
         print('pigpiod has been started')
+        
+    for pid in psutil.pids():
+        p = psutil.Process(pid)
+        if p.name() == "scratch2":
+            found_scratch = True
+            print("scratch2 is running")
+        else:
+            continue
 
-    os.system('scratch2&')
+    if not found_scratch:
+        os.system('scratch2&')
+        print('scratch2 has been started')
+
     server = SimpleWebSocketServer('', 9001, FelixServer)
     server.serveforever()
 
