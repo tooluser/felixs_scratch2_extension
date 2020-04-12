@@ -6,6 +6,7 @@ import sys
 import time
 import traceback
 from subprocess import call
+import requests
 
 import pigpio
 import psutil
@@ -152,6 +153,12 @@ class FelixServer(WebSocket):
             self.pi.wave_tx_stop()
             self.pi.wave_delete(wid)
 
+    def handleLanternBrightness(self, payload):
+        brightness = int(payload['brightness'])
+        url = "http://10.0.1.5/api/brightness/" + brightness
+        r = requests.post(url = url) 
+        print("Response: ", r)
+
     def handleMessage(self):
         try:
             payload = json.loads(self.data)
@@ -175,6 +182,8 @@ class FelixServer(WebSocket):
                 self.handleTone(payload)
             elif client_cmd == 'ready':
                 pass
+            elif client_cmd == 'lantern_brightness':
+                self.handleLanternBrightness(payload)
             else:
                 print("Unknown command received", client_cmd)
             print("------ - ------")
