@@ -153,9 +153,27 @@ class FelixServer(WebSocket):
             self.pi.wave_tx_stop()
             self.pi.wave_delete(wid)
 
+    def handleLEDBrightness(self, payload):
+        pin = int(payload['pin'])
+        brightness = int(payload['brightness']);
+        self.pi.set_PWM_dutycycle(pin, brightness)
+
     def handleLanternBrightness(self, payload):
         brightness = int(payload['brightness'])
-        url = "http://10.0.1.5/api/brightness/" + brightness
+        url = "http://10.0.1.5/api/brightness/" + str(brightness)
+        print("POSTing: ", url)
+        r = requests.post(url = url)
+        print("Response: ", r)
+
+    def handleLanternCycleBegin(self, payload):
+        url = "http://10.0.1.5/api/mode/cycle"
+        print("POSTing: ", url)
+        r = requests.post(url = url)
+        print("Response: ", r)
+
+    def handleLanternCyclePause(self, payload):
+        url = "http://10.0.1.5/api/mode/cycle/pause"
+        print("POSTing: ", url)
         r = requests.post(url = url) 
         print("Response: ", r)
 
@@ -182,8 +200,14 @@ class FelixServer(WebSocket):
                 self.handleTone(payload)
             elif client_cmd == 'ready':
                 pass
+            elif client_cmd == 'lantern_cycle_begin':
+                self.handleLanternCycleBegin(payload)
+            elif client_cmd == 'lantern_cycle_pause':
+                self.handleLanternCyclePause(payload)
             elif client_cmd == 'lantern_brightness':
                 self.handleLanternBrightness(payload)
+            elif client_cmd == 'led_brightness':
+                self.handleLEDBrightness(payload)
             else:
                 print("Unknown command received", client_cmd)
             print("------ - ------")
@@ -191,7 +215,6 @@ class FelixServer(WebSocket):
         except Exception, err:
             print Exception, err
             traceback.print_exc()
-
     # call back from pigpio when a digital input value changed
     # send info back up to scratch
     def input_callback(self, pin, level, tick):

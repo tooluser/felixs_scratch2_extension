@@ -187,10 +187,40 @@
 		}
 		else {
 			return digital_inputs[parseInt(pin)];
-        
 		}
 	};
-    
+
+	ext.set_led_brightness = function(pin, brightness) {
+		if (connected == false) {
+			alert("Server Not Connected");
+		}
+
+		var msg = JSON.stringify({
+			"command": 'led_brightness', 'pin': pin, 'brightness': brightness
+		});
+		sendMessage(msg);
+	}
+
+	ext.set_lantern_to_cycle = function() {
+		if (connected == false) {
+			alert("Server Not Connected");
+		}
+		var msg = JSON.stringify({
+			"command": 'lantern_cycle_begin'
+		});
+		sendMessage(msg);
+	}
+
+	ext.pause_lantern_cycle = function() {
+		if (connected == false) {
+			alert("Server Not Connected");
+		}
+		var msg = JSON.stringify({
+			"command": 'lantern_cycle_pause'
+		});
+		sendMessage(msg);
+	}
+
 	function validatePin(pin) {
 		var rValue = true;
 		if (pin === 'PIN') {
@@ -284,6 +314,9 @@
 			["w", 'Disconnect from felix server.', 'disconnect'],
 			[" ", 'Set up stepper motor with GPIO pins %n, %n, %n, and %n', "setup_motor", "21", "20", "16", "12"],
 			[" ", 'Set magic lantern brightness to %n (0-255)', "set_lantern_brightness", "100"],
+			[" ", 'Cycle magic lantern', "set_lantern_to_cycle"],
+			[" ", 'Pause magic lantern cycle', "pause_lantern_to_cycle"],
+			[" ", 'Set LED on pin %n brightness to %n (0-255)', "set_led_brightness", "PIN", "100"],
 			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
 			[" ", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
