@@ -9,11 +9,14 @@ from subprocess import call
 import requests
 
 import pigpio
+import RPi.GPIO as GPIO
 import psutil
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 # It receives messages from the Scratch and reports back any digital input changes.
 class FelixServer(WebSocket):
+    GPIO.setmode(GPIO.BCM)
+
     MotorStepCount = 8
     MotorSeq = range(0, MotorStepCount)
     MotorSeq[0] = [0,1,0,0]
@@ -177,6 +180,25 @@ class FelixServer(WebSocket):
         r = requests.post(url = url) 
         print("Response: ", r)
 
+    def handleConfigureTrainSwitch(self, payload):
+        servoPin = int(payload['switchPin'])
+        GPIO.setup(servoPin, GPIO.OUT)
+        p = GPIO.PWM(servoPin, 50)
+        p.start(0)
+
+    def handleSetTrainSwitch(self, payload):
+        print("--handleSetTrainSwitch:", payload)
+        servoPin = int(payload['pin'])
+        direction = payload['direction']
+        duty_cycle = 3.0 if direction == 'straight' else 7.0
+
+        GPIO.setup(servoPin, GPIO.OUT)
+        p = GPIO.PWM(servoPin, 50)
+        p.start(0)
+        p.ChangeDutyCycle(duty_cycle)
+        time.sleep(0.5)
+        p.ChangeDutyCycle(0)
+
     def handleMessage(self):
         try:
             payload = json.loads(self.data)
@@ -208,6 +230,10 @@ class FelixServer(WebSocket):
                 self.handleLanternBrightness(payload)
             elif client_cmd == 'led_brightness':
                 self.handleLEDBrightness(payload)
+            elif client_cmd == 'configure_train_switch':
+                self.handleConfigureTrainSwitch(payload)
+            elif client_cmd == 'set_train_switch':
+                self.handleSetTrainSwitch(payload)
             else:
                 print("Unknown command received", client_cmd)
             print("------ - ------")

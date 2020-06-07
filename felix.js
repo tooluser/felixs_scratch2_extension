@@ -129,7 +129,7 @@
 			}
 		}
 	};
-    
+
 	// ***Hackeduca --> when the Servo block is executed
 	ext.servo = function (pin, value) {
 		if (connected == false) {
@@ -156,7 +156,7 @@
 			}
 		}
 	};
-    
+
 	ext.play_tone = function (pin, frequency) {
 		if (connected == false) {
 			alert("Server Not Connected");
@@ -169,7 +169,7 @@
 			sendMessage(msg);
 		}
 	};
-	
+
 	ext.set_lantern_brightness = function(brightness) {
 		if (connected == false) {
 			alert("Server Not Connected");
@@ -180,7 +180,7 @@
 		});
 		sendMessage(msg);
 	};
-    
+
 	ext.digital_read = function (pin) {
 		if (connected == false) {
 			alert("Server Not Connected");
@@ -217,6 +217,16 @@
 		}
 		var msg = JSON.stringify({
 			"command": 'lantern_cycle_pause'
+		});
+		sendMessage(msg);
+	}
+
+	ext.set_train_switch = function(pin, direction) {
+		if (connected == false) {
+			alert("Server Not Connected");
+		}
+		var msg = JSON.stringify({
+			"command": 'set_train_switch', "pin": pin, "direction": direction
 		});
 		sendMessage(msg);
 	}
@@ -318,7 +328,8 @@
 			[" ", 'Pause magic lantern cycle', "pause_lantern_to_cycle"],
 			[" ", 'Set LED on pin %n brightness to %n (0-255)', "set_led_brightness", "PIN", "100"],
 			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
-			[" ", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
+			["w", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
+			["w", 'Set train switch on pin %n to %m.train_switch_direction', "set_train_switch", 23, "straight"],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
 			//
 			//             [" ", 'Set BCM %n as an Input', 'input','PIN'],
@@ -331,7 +342,8 @@
 		"menus": {
 			"high_low": ["0", "1"],
 			"motor_direction": ["cw", "ccw"],
-			"motor_speed" : ["slow", "medium", "fast", "super fast"]
+			"motor_speed" : ["slow", "medium", "fast", "super fast"],
+			"train_switch_direction" : ["straight", "turn"]
 		},
 		url: 'http://www.nowhereville.org'
 	};
