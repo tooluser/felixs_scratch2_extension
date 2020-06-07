@@ -227,6 +227,10 @@
 		sendMessage(msg);
 	}
 
+	ext.console_log = function(message) {
+		console.log(message)
+	}
+
 	function validatePin(pin) {
 		var rValue = true;
 		if (pin === 'PIN') {
@@ -334,6 +338,7 @@
 			// [" ", "Set BCM %n as Servo with angle = %n (0° - 180°)", "servo", "PIN", "0"],     // ***Hackeduca --> Block for Servo
 			//             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
 			["r", "Read pin %n", "digital_read", "PIN"],
+			[" ", "Log message to console", "console_log", "Hello, World!"]
 		],
 		"menus": {
 			"high_low": ["0", "1"],
