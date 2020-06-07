@@ -190,7 +190,7 @@ class FelixServer(WebSocket):
         print("--handleSetTrainSwitch:", payload)
         servoPin = int(payload['pin'])
         direction = payload['direction']
-        duty_cycle = 3.0 if direction == 'straight' else 7.0
+        duty_cycle = 7.0 if direction == 'straight' else 3.0
 
         GPIO.setup(servoPin, GPIO.OUT)
         p = GPIO.PWM(servoPin, 50)
