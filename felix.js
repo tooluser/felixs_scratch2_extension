@@ -328,8 +328,8 @@
 			[" ", 'Pause magic lantern cycle', "pause_lantern_to_cycle"],
 			[" ", 'Set LED on pin %n brightness to %n (0-255)', "set_led_brightness", "PIN", "100"],
 			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
-			["w", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
-			["w", 'Set train switch on pin %n to %m.train_switch_direction', "set_train_switch", 23, "straight"],
+			[" ", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
+			[" ", 'Set train switch on pin %n to %m.train_switch_direction', "set_train_switch", 23, "straight"],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
 			//
 			//             [" ", 'Set BCM %n as an Input', 'input','PIN'],
