@@ -74,8 +74,7 @@
 		return {status: myStatus, msg: myMsg};
 	};
     
-	// when the connect to server block is executed
-	ext.input = function (pin) {
+	ext.input = function(pin) {
 		if (connected == false) {
 			alert("Server Not Connected");
 		}
@@ -181,13 +180,10 @@
 		sendMessage(msg);
 	};
 
-	ext.digital_read = function (pin) {
-		if (connected == false) {
-			alert("Server Not Connected");
-		}
-		else {
-			return digital_inputs[parseInt(pin)];
-		}
+	ext.digital_read = function(pin) {
+		console.log("digital_read", pin);
+		console.log(digital_inputs);
+		return digital_inputs[parseInt(pin)];
 	};
 
 	ext.set_led_brightness = function(pin, brightness) {
@@ -332,12 +328,12 @@
 			[" ", 'Set train switch on pin %n to %m.train_switch_direction', "set_train_switch", 23, "straight"],
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
 			//
-			//             [" ", 'Set BCM %n as an Input', 'input','PIN'],
+			[" ", 'Set pin %n as an input', 'input','PIN'],
 			//             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
 			//             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
 			// [" ", "Set BCM %n as Servo with angle = %n (0° - 180°)", "servo", "PIN", "0"],     // ***Hackeduca --> Block for Servo
 			//             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
-			//             ["r", "Read Digital Pin %n", "digital_read", "PIN"]
+			["r", "Read pin %n", "digital_read", "PIN"],
 		],
 		"menus": {
 			"high_low": ["0", "1"],
