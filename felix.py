@@ -199,6 +199,13 @@ class FelixServer(WebSocket):
         time.sleep(0.5)
         p.ChangeDutyCycle(0)
 
+    def handleConsoleLog(self, payload):
+        print("--handleConsoleLog:", payload)
+        message = payload['message']
+        print("***** **** ***")
+        print(message)
+        print("***** **** ***")
+
     def handleMessage(self):
         try:
             payload = json.loads(self.data)
@@ -234,6 +241,8 @@ class FelixServer(WebSocket):
                 self.handleConfigureTrainSwitch(payload)
             elif client_cmd == 'set_train_switch':
                 self.handleSetTrainSwitch(payload)
+            elif client_cmd == 'console_log':
+                self.handleConsoleLog(payload)
             else:
                 print("Unknown command received", client_cmd)
             print("------ - ------")
