@@ -5,6 +5,7 @@
 	var myStatus = 1; // initially yellow
 	var myMsg = 'not_ready';
 	var motor_configured = false;
+	var ir_sensor_tripped = false;
     
 	ext.connect = function (callback) {
 		console.log("Starting websocket to port 9001");
@@ -28,7 +29,6 @@
         
 		window.socket.onmessage = function (message) {
 			var msg = JSON.parse(message.data);
-            
 			// handle the only reporter message from the server
 			// for changes in digital input state
 			var reporter = msg['report'];
@@ -36,9 +36,13 @@
 				var pin = msg['pin'];
 				digital_inputs[parseInt(pin)] = msg['level'];
 			}
+			if(reporter === 'ir_sensor_triggered') {
+				var trip = parseInt(msg['state']);
+				ir_sensor_tripped = (trip == 1);
+			}
 			console.log(message.data);
 		};
-        
+
 		window.socket.onclose = function (e) {
 			console.log("Connection closed.");
 			socket = null;
@@ -53,13 +57,13 @@
 		console.log("Disconnecting websocket on port 9001");
 		myMsg = "disconnected";
 		connected = false;
-        
+
 		var msg = JSON.stringify({
 			"command": "shutdown"
 		});
 		window.socket.send(msg);
 	};
-    
+
 	// Cleanup function when the extension is unloaded
 	ext._shutdown = function () {
 		var msg = JSON.stringify({
@@ -195,7 +199,7 @@
 			"command": 'led_brightness', 'pin': pin, 'brightness': brightness
 		});
 		sendMessage(msg);
-	}
+	};
 
 	ext.set_lantern_to_cycle = function() {
 		if (connected == false) {
@@ -205,7 +209,7 @@
 			"command": 'lantern_cycle_begin'
 		});
 		sendMessage(msg);
-	}
+	};
 
 	ext.pause_lantern_cycle = function() {
 		if (connected == false) {
@@ -215,7 +219,7 @@
 			"command": 'lantern_cycle_pause'
 		});
 		sendMessage(msg);
-	}
+	};
 
 	ext.set_train_switch = function(pin, direction) {
 		if (connected == false) {
@@ -225,7 +229,7 @@
 			"command": 'set_train_switch', "pin": pin, "direction": direction
 		});
 		sendMessage(msg);
-	}
+	};
 
 	ext.console_log = function(message) {
 		if (connected == false) {
@@ -235,7 +239,25 @@
 			"command": 'console_log', "message": message
 		});
 		sendMessage(msg);
-	}
+	};
+
+	ext.ir_sensor_activated = function() {
+		if (ir_sensor_tripped) {
+			console.log("********** Sensor tripped");
+			return true;
+		} else {
+			console.log("++++++++++ Sensor deactivated");
+			return false;
+		}
+	};
+
+	ext.setup_ir_sensor = function(pin) {
+		if (connected == false) {
+			alert("Server Not Connected");
+		}
+		var msg = JSON.stringify({"command": 'configure_ir_sensor', "pin": pin});
+		sendMessage(msg);
+	};
 
 	function validatePin(pin) {
 		var rValue = true;
@@ -339,12 +361,14 @@
 			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
 			//
 			[" ", 'Set pin %n as an input', 'input','PIN'],
+			[" ", 'Set up pin %n as an IR sensor', 'setup_ir_sensor','PIN'],
 			//             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
 			//             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
 			// [" ", "Set BCM %n as Servo with angle = %n (0° - 180°)", "servo", "PIN", "0"],     // ***Hackeduca --> Block for Servo
 			//             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
 			["r", "Read pin %n", "digital_read", "PIN"],
-			[" ", "Log %s to console", "console_log", "Hello, World!"]
+			[" ", "Log %s to console", "console_log", "Hello, World!"],
+			['h', 'When IR sensor detects something', 'ir_sensor_activated', "PIN"],
 		],
 		"menus": {
 			"high_low": ["0", "1"],

@@ -1,5 +1,5 @@
 # no. #!/usr/bin/env python3
-
+# Official docs: https://github.com/llk/scratchx/wiki#command-blocks-that-wait
 import json
 import os
 import sys
@@ -34,6 +34,11 @@ class FelixServer(WebSocket):
         "super fast": 5.0/1000
     }
     
+    def handleSetupIRSensor(self, payload):
+        self.ir_sensor_pin = int(payload['pin'])
+        self.ir_sensor_configured = True;
+        self.handleInput(payload) # Also register as an input pin
+
     def handleSetupMotor(self, payload):
         print("--handleSetupMotor")
         self.motor_pin1 = int(payload['pin1'])
@@ -243,6 +248,8 @@ class FelixServer(WebSocket):
                 self.handleSetTrainSwitch(payload)
             elif client_cmd == 'console_log':
                 self.handleConsoleLog(payload)
+            elif client_cmd == 'configure_ir_sensor':
+                self.handleSetupIRSensor(payload)
             else:
                 print("Unknown command received", client_cmd)
             print("------ - ------")
@@ -250,6 +257,7 @@ class FelixServer(WebSocket):
         except Exception, err:
             print Exception, err
             traceback.print_exc()
+
     # call back from pigpio when a digital input value changed
     # send info back up to scratch
     def input_callback(self, pin, level, tick):
@@ -257,6 +265,13 @@ class FelixServer(WebSocket):
         print('callback', payload)
         msg = json.dumps(payload)
         self.sendMessage(msg)
+
+        # Also send ir-sensor-triggered if this is a registered IR sensor
+        if (self.ir_sensor_configured and (pin == self.ir_sensor_pin)):
+            payload = {'report': 'ir_sensor_triggered', 'state': str(level)}
+            print('callback', payload)
+            msg = json.dumps(payload)
+            self.sendMessage(msg)
 
     def handleConnected(self):
         self.pi = pigpio.pi()
