@@ -355,20 +355,14 @@
 			[" ", 'Cycle magic lantern', "set_lantern_to_cycle"],
 			[" ", 'Pause magic lantern cycle', "pause_lantern_to_cycle"],
 			[" ", 'Set LED on pin %n brightness to %n (0-255)', "set_led_brightness", "PIN", "100"],
-			//                 "command": 'setup_motor', 'pin1': pin, 'pin2': pin, 'pin3': pin, 'pin4': pin,
 			[" ", 'Rotate stepper motor %m.motor_direction at %m.motor_speed speed for %n steps', "rotate_motor", "DIR", "SPEED", 0],
 			[" ", 'Set train switch on pin %n to %m.train_switch_direction', "set_train_switch", 23, "straight"],
-			// 				   "command": 'rotate_motor', 'speed': speed, 'dir': dir
-			//
 			[" ", 'Set pin %n as an input', 'input','PIN'],
 			[" ", 'Set up pin %n as an IR sensor', 'setup_ir_sensor','PIN'],
-			//             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
-			//             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
-			// [" ", "Set BCM %n as Servo with angle = %n (0° - 180°)", "servo", "PIN", "0"],     // ***Hackeduca --> Block for Servo
+			['h', 'When IR sensor detects something', 'ir_sensor_activated', "PIN"],
 			//             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
 			["r", "Read pin %n", "digital_read", "PIN"],
 			[" ", "Log %s to console", "console_log", "Hello, World!"],
-			['h', 'When IR sensor detects something', 'ir_sensor_activated', "PIN"],
 		],
 		"menus": {
 			"high_low": ["0", "1"],
